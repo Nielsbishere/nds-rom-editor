@@ -1,2 +1,1 @@
-# nfe
-Nintendo File Explorer (nfs reloaded)
+# nds-rom-editor aka nfs reloaded
