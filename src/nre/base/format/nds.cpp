@@ -68,7 +68,7 @@ NDSFileSystem::NDSFileSystem(NDS *nds) : FileSystem({ FileAccess::NONE, FileAcce
 			nullptr,
 			0, 0,
 			0, 0,
-			FileHandle(root[i].relation & 0xFFF),
+			FileHandle(root[i].relation - 0xF000),
 			0, true
 		};
 
@@ -102,7 +102,7 @@ NDSFileSystem::NDSFileSystem(NDS *nds) : FileSystem({ FileAccess::NONE, FileAcce
 
 		if (spec & 0x80) {
 
-			NDSFile &nf = nfiles[*(u16*)nameDat & 0xFFF];
+			NDSFile &nf = nfiles[*(u16*)nameDat - 0xF000];
 			nf.name = name;
 			nf.nameLen = nameLen;
 			nameDat += 2;
