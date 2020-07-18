@@ -1,6 +1,5 @@
 #pragma once
 #include <system/log.hpp>
-#include <system/file_system.hpp>
 
 namespace nre {
 
@@ -75,27 +74,15 @@ namespace nre {
 		bool invalid() const;
 	};
 
-	//Implementation of oic FileSystem to support NDS
-	class NDSFileSystem : public oic::FileSystem {
-
-	public:
-
-		NDSFileSystem(NDS*) noexcept(false);
-
-		bool read(const oic::FileInfo &file, void *address, usz size, usz offset) const final override;
-		bool write(oic::FileInfo &file, const Buffer &buffer, usz size = 0, usz bufferOffset = 0, usz fileOffset = 0) final override;
-		void initFiles() final override {}
-	};
-
-	//Array of NDSFolder located at fntOffset
-	struct NDSFolder {
+	//Array of FNTFolder located at fntOffset
+	struct FNTFolder {
 		u32 offset;
 		u16 firstFilePosition;
 		u16 relation;
 	};
 
-	//A representation of a NDSFile
-	struct NDSFile {
+	//A representation of a FNTFile
+	struct FNTFile {
 
 		const c8 *name;
 
@@ -104,7 +91,6 @@ namespace nre {
 
 		u16 files, folders;
 		u16 parent; u8 nameLen; bool isFolder;
-
 	};
 
 	//A banner located at NDS::iconOffset
@@ -130,12 +116,14 @@ namespace nre {
 		//Not every game has titles for every language
 		//If it doesn't, the title at the index will be empty
 		enum Language : u8 {
+
 			JAPANESE,
 			ENGLISH,
 			FRENCH,
 			GERMAN,
 			ITALIAN,
 			SPANISH,
+
 			LANGUAGE_START = JAPANESE,
 			LANGUAGE_END = SPANISH + 1
 		};
@@ -145,9 +133,7 @@ namespace nre {
 		inline bool hasTitle(Language lang) const { return titles[lang][0]; }
 
 		inline WString getTitle(Language lang = ENGLISH) const { 
-			WString str = WString(titles[lang]);
-			std::replace(str.begin(), str.end(), L'\n', L' ');
-			return str;
+			return titles[lang];
 		}
 	};
 }

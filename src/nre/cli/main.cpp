@@ -1,5 +1,6 @@
 #include "main.hpp"
 #include "helper/color.hpp"
+#include "helper/nds_file_system.hpp"
 #include <system/local_file_system.hpp>
 #include <iostream>
 #include <codecvt>
@@ -359,15 +360,19 @@ int exportDebug(const String &path, NDS *nds, FileSystem*) {
 
 int exportFiles(const String &path, NDS*, FileSystem *fs) {
 
-	for (auto &f : fs->getFiles(true)) {
+	usz i = usz_MAX;
 
-		if (f.id == 0) continue;
+	for (auto &f : fs->getVirtualFiles()) {
+
+		++i;
+
+		if (i == 0 || f.isFolder()) continue;
 
 		String file = f.path.substr(2);
-		if (int ret = makeFile(path, file, f.isFolder)) return ret;
+		if (int ret = makeFile(path, file, f.isFolder())) return ret;
 
 		Buffer buf;
-		fs->read(f, buf);
+		fs->read(f.path, buf);
 
 		if(f.fileSize)
 			System::files()->write(file, buf);
@@ -405,18 +410,21 @@ inline void logFile(u8 *ptr, const FileInfo &f) {
 			<< " and size " << f.fileSize << " (0x" << Log::num<16>(u32(f.fileSize))
 			<< ") ";
 
-		String magicNum = String((u8*)&f.magicNumber, (u8*)(&f.magicNumber + 1));
+		u8 magicNum[4];
+		std::memcpy(magicNum, f.dataExt, std::min(FileSize(4), f.fileSize));
+
+		String magicNumber(magicNum, magicNum + sizeof(magicNum));
 
 		bool isValidMagicNum = true;
 
-		for (const c8 c : magicNum)
-			if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))) {
+		for (const c8 c : magicNumber)
+			if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_')) {
 				isValidMagicNum = false;
 				break;
 			}
 
 		if (isValidMagicNum)
-			cout << "and magic number \"" << magicNum << "\"";
+			cout << "and magic number \"" << magicNumber << "\"";
 	}
 
 	cout << endl;
@@ -426,7 +434,7 @@ int infoFiles(const String&, NDS *nds, FileSystem *fs) {
 
 	u8 *ptr = (u8*)nds;
 
-	for (auto &f : fs->getFiles(true))
+	for (auto &f : fs->getVirtualFiles())
 		logFile(ptr, f);
 
 	return 0;
@@ -436,8 +444,8 @@ int infoFolders(const String&, NDS *nds, FileSystem *fs) {
 
 	u8 *ptr = (u8*)nds;
 
-	for (auto &f : fs->getFiles(true))
-		if(f.isFolder)
+	for (auto &f : fs->getVirtualFiles())
+		if(f.isFolder())
 			logFile(ptr, f);
 
 	return 0;

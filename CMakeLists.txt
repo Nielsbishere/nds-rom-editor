@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.13.0)
 project(nds-rom-editor)
 
+add_definitions(-D_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING)
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -16,7 +18,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 file(GLOB_RECURSE nreHpp "include/nre/base/*.hpp")
 file(GLOB_RECURSE nreCpp "src/nre/base/*.cpp")
 
-option(NRE_IS_CLI "nds-rom-editor Is Command Line Interface" ON)
+option(NRE_IS_CLI "nds-rom-editor Is Command Line Interface" OFF)
 
 add_subdirectory(igx/ignis/core2)
 
@@ -57,8 +59,6 @@ if(${NRE_IS_CLI})
 	target_include_directories(nds-rom-editor-cli PUBLIC third_party)
 	target_link_libraries(nds-rom-editor-cli PUBLIC nds-rom-editor)
 
-	target_compile_definitions(nds-rom-editor-cli PUBLIC -D_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING)
-
 	source_group("Headers" FILES ${nreCliHpp})
 	source_group("Source" FILES ${nreCliCpp})
 
@@ -69,6 +69,7 @@ if(${NRE_IS_CLI})
 	endif()
 	
 else()
+
 	# UI
 
 	add_subdirectory(igx)
@@ -76,30 +77,25 @@ else()
 	file(GLOB_RECURSE nreUiHpp "include/nre/ui/*.hpp")
 	file(GLOB_RECURSE nreUiCpp "src/nre/ui/*.cpp")
 
-	file(GLOB_RECURSE shaders "res/shaders/*.comp" "res/shaders/*.vert" "res/shaders/*.frag")
-	file(GLOB_RECURSE shaderBinaries "res/shaders/*.spv")
-
 	add_executable(
 		nds-rom-editor-ui
 		${nreUiHpp}
 		${nreUiCpp}
-		${shaders}
-		${shaderBinaries}
 		CMakeLists.txt
 	)
 
-	set_property(TARGET nds-rom-editor-ui PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/res")
-
 	target_include_directories(nds-rom-editor-ui PUBLIC include/nre/ui)
+	target_include_directories(nds-rom-editor-ui PUBLIC include/nre/base)
 	target_include_directories(nds-rom-editor-ui PUBLIC igx/include)
 	target_link_libraries(nds-rom-editor-ui PUBLIC nds-rom-editor igx)
 
+	configure_icon(nds-rom-editor-ui "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.ico")
+	configure_virtual_files(nds-rom-editor-ui)
+
+	set_property(TARGET nds-rom-editor-ui PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/res")
+
 	source_group("Headers" FILES ${nreUiHpp})
 	source_group("Source" FILES ${nreUiCpp})
-	source_group("Shaders" FILES ${shaders})
-	source_group("Shader binaries" FILES ${shaderBinaries})
-
-	add_custom_command(TARGET nds-rom-editor-ui POST_BUILD COMMAND compile.sh ${shaders} WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/res/shaders")
 
 	if(MSVC)
 	    target_compile_options(nds-rom-editor-ui PRIVATE /W4 /WX /MD /MP /wd26812 /wd4201 /EHsc /GR)

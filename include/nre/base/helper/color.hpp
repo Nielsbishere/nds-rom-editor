@@ -3,6 +3,7 @@
 
 namespace nre {
 
+	using r4_8 = u8;	//Not actually 4 bits, because it's not possible but does indicate it can be 4 or 8 bit
 	using r8 = u8;
 
 	using bgr5 = u16;
