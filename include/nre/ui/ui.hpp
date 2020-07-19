@@ -115,7 +115,7 @@ namespace nre {
 			g(g), gui(g, SetClearColor(Vec4f32(0.125f, 0.25f, 0.5f))), 
 			fileSystem(rom), romExplorer(ROMExplorer{ rom, rom ? &fileSystem : nullptr }) 
 		{
-			gui.addWindow(Window("ROM Explorer", 0, {}, { 600, 450 }, &romExplorer, Window::DEFAULT_SCROLL));
+			gui.addWindow(Window("ROM Explorer", 0, {}, { 600, 450 }, &romExplorer, Window::Flags(Window::DEFAULT_SCROLL & ~Window::CLOSE)));
 		}
 
 		void init(ViewportInfo *vp) final override {
