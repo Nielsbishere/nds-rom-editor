@@ -4,7 +4,7 @@
 #include "helpers/common.hpp"
 #include "gui/gui.hpp"
 #include "gui/struct_inspector.hpp"
-#include "types/nds.hpp"
+#include "nds_viewer.hpp"
 #include "helper/nds_file_system.hpp"
 
 #include <codecvt>
@@ -17,88 +17,15 @@ namespace nre {
 	using namespace igx;
 	using namespace ui;
 
-	struct GameInfo {
-
-		inline String toUTF8(const WString &wstr) {
-			return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(wstr);
-		}
-
-		String gameTitle, gameCode, makerCode;
-		u32 version, unitCode;
-
-		HashMap<String, String> titles;
-
-		GameInfo(NDS *nds) :
-			gameTitle(nds->title), gameCode(nds->gameCode, nds->gameCode + 4),
-			makerCode(nds->makerCode, nds->makerCode + 2),
-			version(nds->version), unitCode(nds->unitCode)
-		{
-			NDSBanner *banner = NDSBanner::get(nds);
-
-			static constexpr c8 languages[NDSBanner::LANGUAGE_END][9] = {
-				"Japanese",
-				"English",
-				"French",
-				"German",
-				"Italian",
-				"Spanish",
-			};
-
-			for(u8 l = NDSBanner::LANGUAGE_START; l != NDSBanner::LANGUAGE_END; ++l)
-				if (banner->hasTitle(NDSBanner::Language(l)))
-					titles[languages[l]] = toUTF8(banner->getTitle(NDSBanner::Language(l)));
-		}
-
-		template<typename T, typename T2>	
-		void inflect(T &inflector, const T2*) {
-			inflector.inflect(
-				this, 
-				{ "Game title", "Game code", "Maker code", "Version", "Unit code", "Titles" }, 
-				gameTitle, gameCode, makerCode, 
-				version, unitCode, titles
-			);
-		}
-
-		template<typename T, typename T2>	
-		void inflect(T &inflector, const T2*) const {
-			inflector.inflect(
-				this, 
-				{ "Game title", "Game code", "Maker code", "Version", "Unit code", "Titles" }, 
-				gameTitle, gameCode, makerCode, 
-				version, unitCode, titles
-			);
-		}
-
-	};
-
 	struct ROMExplorer {
 
+		NDSViewer *nds{};
 		FileSystem *fs{};
-		NDS *nds{};
 
 		ROMExplorer(NDS *_nds = nullptr, FileSystem *_fs = nullptr): 
-			nds(_nds), fs(_fs) {}
+			nds((NDSViewer*)_nds), fs(_fs) {}
 
-		template<typename T, typename T2>	
-		void inflect(T &inflector, const T2*) {
-			inflector.inflect(
-				this, 
-				{ "Game info", "File explorer" }, 
-				GameInfo(nds),
-				fs
-			);
-		}
-
-		template<typename T, typename T2>	
-		void inflect(T &inflector, const T2*) const {
-			inflector.inflect(
-				this, 
-				{ "Game info", "File explorer" }, 
-				GameInfo(nds),
-				fs
-			);
-		}
-
+		InflectWithName({ "Game info", "File explorer" }, *nds, fs);
 	};
 
 	struct Explorer : public ViewportInterface {

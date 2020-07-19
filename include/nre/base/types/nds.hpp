@@ -1,9 +1,13 @@
 #pragma once
 #include <system/log.hpp>
+#include <utils/inflect.hpp>
 
 namespace nre {
 
+	struct NDSBanner;
+
 	//NDS file format
+
 	struct NDS {
 
 		c8 title[12];
@@ -68,10 +72,13 @@ namespace nre {
 		u32 reserved2;
 		u8 reserved3[144];
 
+		inline NDSBanner *getBanner() { return (NDSBanner*)((u8*)this + bannerOffset); }
+
 		//Only get NDS ROM if the header is valid
 
 		static NDS *get(u8 *romPtr, usz romSize);
 		bool invalid() const;
+
 	};
 
 	//Array of FNTFolder located at fntOffset
@@ -93,25 +100,20 @@ namespace nre {
 		u16 parent; u8 nameLen; bool isFolder;
 	};
 
-	//A banner located at NDS::iconOffset
+	//A banner located at NDS::bannerOffset
 	//Contains the game screen titles and icon
 	struct NDSBanner {
 
-		static inline NDSBanner *get(NDS *nds) {
-			oicAssert("NDS* is required", nds);
-			return (NDSBanner*)((u8*)nds + nds->bannerOffset);
-		}
-
 		//Header
 
-		u16 version;
-		u16 checksum;
-		u8 reserved[28];
+		u16 Version;
+		u16 Checksum;
+		u8 Reserved[28];
 
 		//BGR5 4-bit encoded images
 
-		u8 icon[32 * 32 / 2];			//NDS icon data 4-bit 32x32 (palette[i])
-		u16 palette[16];				//NDS icon palette (BGR5)
+		u8 Icon[32 * 32 / 2];			//NDS icon data 4-bit 32x32 (palette[i])
+		u16 Palette[16];				//NDS icon palette (BGR5)
 		
 		//Not every game has titles for every language
 		//If it doesn't, the title at the index will be empty
@@ -128,7 +130,28 @@ namespace nre {
 			LANGUAGE_END = SPANISH + 1
 		};
 
-		c16 titles[LANGUAGE_END][128];		//Title of game in 6 languages (unicode)
+		union {
+
+			c16 titles[LANGUAGE_END][128];		//Title of game in 6 languages (unicode)
+
+			struct _Titles {
+
+				c16 Japanese[128];
+				c16 English[128];
+				c16 French[128];
+				c16 German[128];
+				c16 Italian[128];
+				c16 Spanish[128];
+
+				Inflect(Japanese, English, French, German, Italian, Spanish);
+
+			} Titles;
+
+		};
+
+		//Helpers
+
+		Inflect(Version, Checksum, Titles);
 
 		inline bool hasTitle(Language lang) const { return titles[lang][0]; }
 

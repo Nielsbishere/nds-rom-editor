@@ -53,6 +53,11 @@ if(${NRE_IS_CLI})
 		CMakeLists.txt
 	)
 
+	# TODO: Find some way to remove font and shaders, to reduce the executable size
+
+	configure_icon(nds-rom-editor-ui "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.ico")
+	configure_virtual_files(nds-rom-editor-ui)
+
 	set_property(TARGET nds-rom-editor-cli PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/res")
 
 	target_include_directories(nds-rom-editor-cli PUBLIC include/nre/cli)
@@ -70,11 +75,9 @@ if(${NRE_IS_CLI})
 	
 else()
 
-	# UI
-	
 	set(doShaderRecreate FALSE CACHE BOOL "Enable shader recompilation")
 	set(enableIgxTest FALSE CACHE BOOL "Enable IGX test")
-
+	
 	add_subdirectory(igx)
 
 	file(GLOB_RECURSE nreUiHpp "include/nre/ui/*.hpp")
