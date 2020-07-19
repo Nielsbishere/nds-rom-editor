@@ -71,6 +71,9 @@ if(${NRE_IS_CLI})
 else()
 
 	# UI
+	
+	set(doShaderRecreate FALSE CACHE BOOL "Enable shader recompilation")
+	set(enableIgxTest FALSE CACHE BOOL "Enable IGX test")
 
 	add_subdirectory(igx)
 
